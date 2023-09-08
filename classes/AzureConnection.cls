@@ -171,6 +171,30 @@ public with sharing class AzureConnection {
     }
 
     @AuraEnabled(Cacheable=true)
+    public static void updateWorkItemState(String setOrganizationName, String setProjectName, String setUserName, String setPersonalAccessToken, Integer workItemId, String newState) {
+        HttpRequest req = new HttpRequest();
+        HttpResponse res = new HttpResponse();
+        Http http = new Http();
+
+        ORGANIZATION = setOrganizationName;
+        PROJECT = setProjectName;
+        USERNAME = setUserName;
+        PAT = setPersonalAccessToken;
+
+        req.setEndpoint('https://dev.azure.com/' + ORGANIZATION + '/' + PROJECT + '/_apis/wit/workitems/' + workItemId + '?api-version=6.0');
+        req.setMethod('PATCH');
+        req.setHeader('Authorization', 'Basic ' + EncodingUtil.base64Encode(Blob.valueOf(':' + PAT)));
+        req.setHeader('Content-Type', 'application/json-patch+json');
+
+        // Construct the JSON body for the update
+        String body = '[{"op": "add", "path": "/fields/System.State", "value": "' + newState + '"}]';
+        req.setBody(body);
+
+        res = http.send(req);
+        // Handle the response as required
+    }
+
+    @AuraEnabled(Cacheable=true)
     public static void addWorkItemComment(String setOrganizationName, String setProjectName, String setUserName, String setPersonalAccessToken,Integer workItemId, String commentText) {
         ORGANIZATION = setOrganizationName;
         PROJECT = setProjectName;

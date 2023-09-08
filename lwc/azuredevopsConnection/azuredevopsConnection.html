@@ -25,6 +25,9 @@
                     <th scope="col">
                         <div class="slds-truncate" title="Add Comment">Add Comment</div>
                     </th>
+                    <th scope="col">
+                        <div class="slds-truncate" title="Update State">Update State</div>
+                    </th>
                 </tr>
                 </thead>
                 <tbody>
@@ -44,6 +47,18 @@
                                 <lightning-textarea label="New Comment" onchange={handleCommentChange} data-id={item.Id}></lightning-textarea>
                                 <lightning-button label="Post" onclick={postComment} data-id={item.Id}></lightning-button>
                             </template>
+                        </td>
+                        <td>
+                            <lightning-combobox
+                                    name="states"
+                                    label="State"
+                                    value={item.State}
+                                    placeholder="Select a State"
+                                    options={statesOptions}
+                                    onchange={handleStateChange}
+                                    data-id={item.Id}>
+                            </lightning-combobox>
+                            <lightning-button label="Update" onclick={updateState} data-id={item.Id}></lightning-button>
                         </td>
                     </tr>
                 </template>

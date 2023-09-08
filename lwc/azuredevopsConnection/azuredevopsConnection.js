@@ -2,6 +2,8 @@ import { LightningElement, api, track } from 'lwc';
 import getDetailedWorkItems from '@salesforce/apex/AzureConnection.getDetailedWorkItems';
 import getWorkItemComments from '@salesforce/apex/AzureConnection.getWorkItemComments';
 import addWorkItemComment from '@salesforce/apex/AzureConnection.addWorkItemComment';
+import updateWorkItemState from '@salesforce/apex/AzureConnection.updateWorkItemState';
+
 export default class AzureDevOpsConnection extends LightningElement {
     @api setOrganizationName;
     @api setProjectName;
@@ -11,6 +13,14 @@ export default class AzureDevOpsConnection extends LightningElement {
     @track workItems = [];
     @track isModalOpen = false;
     @track currentComments = [];
+    @track statesOptions = [
+        { label: 'New', value: 'New' },
+        { label: 'Active', value: 'Active' },
+        { label: 'Resolved', value: 'Resolved' },
+        { label: 'Closed', value: 'Closed' },
+        { label: 'Removed', value: 'Removed' }
+    ];
+
     currentWorkItemId;
 
     connectedCallback() {
@@ -68,6 +78,33 @@ export default class AzureDevOpsConnection extends LightningElement {
             })
             .catch(error => {
                 console.error('Error posting comment', error);
+            });
+    }
+
+    handleStateChange(event) {
+        const workItemId = event.currentTarget.dataset.id;
+        const workItem = this.workItems.find(item => item.Id == workItemId);
+        workItem.newState = event.target.value;
+    }
+
+    updateState(event) {
+        const workItemId = event.currentTarget.dataset.id;
+        const workItem = this.workItems.find(item => item.Id == workItemId);
+
+        updateWorkItemState({
+            setOrganizationName: this.setOrganizationName,
+            setProjectName: this.setProjectName,
+            setUserName: this.setUserName,
+            setPersonalAccessToken: this.setPersonalAccessToken,
+            workItemId: workItemId,
+            newState: workItem.newState
+        })
+            .then(() => {
+                alert('State updated successfully');
+                // Reload or refresh the work items or just update the specific work item's state in the UI.
+            })
+            .catch(error => {
+                console.error('Error updating state', error);
             });
     }
 }
