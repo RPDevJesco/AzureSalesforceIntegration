@@ -1,24 +1,60 @@
 <template>
     <lightning-card title="Azure DevOps Work Items">
-        <template if:true={workItems.length}>
-            <lightning-datatable
-                    key-field="Id"
-                    data={workItems}
-                    columns={columns}
-                    hide-checkbox-column="true">
-            </lightning-datatable>
-        </template>
-        <template if:true={error}>
-            <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">
-                <span class="slds-assistive-text">error</span>
-                <span class="slds-icon_container slds-icon-utility-error slds-m-right_x-small" title="Error">
-                    <lightning-icon icon-name="utility:error" size="x-small" variant="inverse"></lightning-icon>
-                </span>
-                <h2>{error}</h2>
-            </div>
-        </template>
-        <template if:false={workItems.length}>
-            <div class="slds-m-around_medium">No work items found.</div>
+        <template if:true={workItems}>
+            <table class="slds-table slds-table_cell-buffer">
+                <thead>
+                <tr class="slds-text-title_caps">
+                    <th scope="col">
+                        <div class="slds-truncate" title="Id">Id</div>
+                    </th>
+                    <th scope="col">
+                        <div class="slds-truncate" title="Title">Title</div>
+                    </th>
+                    <th scope="col">
+                        <div class="slds-truncate" title="Description">Description</div>
+                    </th>
+                    <th scope="col">
+                        <div class="slds-truncate" title="State">State</div>
+                    </th>
+                    <th scope="col">
+                        <div class="slds-truncate" title="WorkItemType">Type</div>
+                    </th>
+                    <th scope="col">
+                        <div class="slds-truncate" title="Comments">Comments</div>
+                    </th>
+                    <th scope="col">
+                        <div class="slds-truncate" title="Add Comment">Add Comment</div>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <template for:each={workItems} for:item="item">
+                    <tr key={item.Id}>
+                        <td>{item.Id}</td>
+                        <td>{item.Title}</td>
+                        <td>{item.Description}</td>
+                        <td>{item.State}</td>
+                        <td>{item.WorkItemType}</td>
+                        <td>
+                            <lightning-button label="View Comments" onclick={openModal} data-id={item.Id}></lightning-button>
+                        </td>
+                        <td>
+                            <lightning-input type="checkbox" label="Add Comment" onchange={toggleAddComment} data-id={item.Id}></lightning-input>
+                            <template if:true={item.showAddComment}>
+                                <lightning-textarea label="New Comment" onchange={handleCommentChange} data-id={item.Id}></lightning-textarea>
+                                <lightning-button label="Post" onclick={postComment} data-id={item.Id}></lightning-button>
+                            </template>
+                        </td>
+                    </tr>
+                </template>
+                </tbody>
+            </table>
         </template>
     </lightning-card>
+
+    <c-modal title="ADO Comments" onclose={closeModal} is-open={isModalOpen}>
+        <template for:each={currentComments} for:item="comment">
+            <p key={comment}>{comment}</p>
+        </template>
+    </c-modal>
 </template>

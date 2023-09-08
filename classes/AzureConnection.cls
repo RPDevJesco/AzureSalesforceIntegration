@@ -8,12 +8,6 @@ public with sharing class AzureConnection {
     private static String USERNAME;
     private static String PAT;
 
-    private static void SetDataForCallout(String setOrganizationName, String setProjectName, String setUserName, String setPersonalAccessToken) {
-        ORGANIZATION = setOrganizationName;
-        PROJECT = setProjectName;
-        USERNAME = setUserName;
-        PAT = setPersonalAccessToken;
-    }
     // Initialize HttpRequest
     private static HttpRequest initializeHttpRequest(String endpoint, String method) {
         HttpRequest req = new HttpRequest();
@@ -148,5 +142,50 @@ public with sharing class AzureConnection {
         }
 
         return workItems;
+    }
+
+    @AuraEnabled(Cacheable=true)
+    public static List<String> getWorkItemComments(String setOrganizationName, String setProjectName, String setUserName, String setPersonalAccessToken, Integer workItemId) {
+        ORGANIZATION = setOrganizationName;
+        PROJECT = setProjectName;
+        USERNAME = setUserName;
+        PAT = setPersonalAccessToken;
+        List<String> comments = new List<String>();
+        String endpoint = 'https://dev.azure.com/' + ORGANIZATION + '/' + PROJECT + '/_apis/wit/workitems/' + workItemId + '/comments?api-version=6.0-preview';
+        HttpRequest req = initializeHttpRequest(endpoint, 'GET');
+        setAuthentication(req);
+        HttpResponse res = executeCallout(req);
+        if (res.getStatusCode() != 200) {
+            // You can log the error or throw an exception with the response body to get more details about the failure
+            System.debug('Callout failed with status: ' + res.getStatusCode() + '. Response: ' + res.getBody());
+            System.debug('Failed to fetch comments for work item: ' + workItemId);
+        }
+
+        Map<String, Object> parsedResponse = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+        List<Object> commentsData = (List<Object>) parsedResponse.get('comments');
+        for (Object commentData : commentsData) {
+            Map<String, Object> commentMap = (Map<String, Object>) commentData;
+            comments.add((String) commentMap.get('text'));
+        }
+        return comments;
+    }
+
+    @AuraEnabled(Cacheable=true)
+    public static void addWorkItemComment(String setOrganizationName, String setProjectName, String setUserName, String setPersonalAccessToken,Integer workItemId, String commentText) {
+        ORGANIZATION = setOrganizationName;
+        PROJECT = setProjectName;
+        USERNAME = setUserName;
+        PAT = setPersonalAccessToken;
+        String endpoint = 'https://dev.azure.com/' + ORGANIZATION + '/' + PROJECT + '/_apis/wit/workitems/' + workItemId + '/comments?api-version=6.0-preview';
+        HttpRequest req = initializeHttpRequest(endpoint, 'POST');
+        setAuthentication(req);
+
+        Map<String, String> requestBody = new Map<String, String>{
+                'text' => commentText
+        };
+        req.setBody(JSON.serialize(requestBody));
+
+        HttpResponse res = executeCallout(req);
+        // Handle the response if necessary
     }
 }

@@ -15,4 +15,6 @@ public class WorkItem {
     public String Tags;
     @AuraEnabled
     public String Description;
+    @AuraEnabled
+    public List<String> Comments;
 }
